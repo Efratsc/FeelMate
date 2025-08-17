@@ -10,6 +10,9 @@ from dotenv import load_dotenv
 
 def create_env_file():
     """Create .env file with database configuration"""
+    print("📝 Creating .env file from template...")
+    print("✅ Using the same database URL as frontend")
+    
     env_content = """# Database Configuration - Same as frontend
 DATABASE_URL=postgresql://neondb_owner:npg_Y8vGl1iFPBgz@ep-broad-bird-abjwvzcp.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 
