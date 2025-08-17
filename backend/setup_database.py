@@ -10,11 +10,17 @@ from dotenv import load_dotenv
 
 def create_env_file():
     """Create .env file with database configuration"""
-    print("📝 Creating .env file from template...")
-    print("✅ Using the same database URL as frontend")
+    print("�� Creating .env file...")
+    print("🔒 SECURITY: Database credentials will not be exposed in code")
+    
+    # Check if .env already exists
+    if os.path.exists('.env'):
+        print("✅ .env file already exists")
+        return
     
     env_content = """# Database Configuration - Same as frontend
-DATABASE_URL=postgresql://neondb_owner:npg_Y8vGl1iFPBgz@ep-broad-bird-abjwvzcp.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+# Copy your DATABASE_URL from your frontend .env file
+DATABASE_URL=your_database_url_here
 
 # Server Configuration
 PORT=8001

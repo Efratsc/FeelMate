@@ -7,13 +7,16 @@
 pip install -r requirements.txt
 ```
 
-### 2. Configure Environment Variables
-Copy the template and update with your database credentials:
+### 2. Configure Environment Variables (SECURE)
+Run the secure setup script:
 ```bash
-cp env.template .env
+python secure_setup.py
 ```
 
-**IMPORTANT:** Update the `.env` file with your actual `DATABASE_URL` from your frontend configuration.
+**Then manually edit the `.env` file:**
+- Open `.env` in your editor
+- Replace `your_database_url_here` with your actual `DATABASE_URL`
+- Copy the `DATABASE_URL` from your frontend `.env` file
 
 ### 3. Run Database Setup
 ```bash
@@ -27,10 +30,10 @@ python chat_server.py
 
 ## 🔒 Security Notes
 
-- **Never commit `.env` files to version control**
-- The `.env` file is already in `.gitignore`
-- Use `env.template` as a reference for required environment variables
-- Keep your database credentials secure and private
+- **✅ No credentials exposed in code** - All sensitive data is in `.env` files only
+- **✅ .env files are gitignored** - Won't be pushed to GitHub
+- **✅ Template-based setup** - Users provide their own credentials
+- **✅ Secure by default** - No hardcoded database URLs
 
 ## 📡 API Endpoints
 
