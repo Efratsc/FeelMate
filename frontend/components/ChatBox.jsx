@@ -4,6 +4,7 @@ export default function ChatBox() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -28,7 +29,7 @@ export default function ChatBox() {
         body: JSON.stringify({
           message: userMessage,
           user_id: "user-123", // You can get this from auth context
-          session_id: "session-" + Date.now()
+          session_id: sessionId // Use existing session or null for new session
         })
       });
 
@@ -37,6 +38,11 @@ export default function ChatBox() {
       }
 
       const data = await response.json();
+      
+      // Store session ID for future messages
+      if (!sessionId) {
+        setSessionId(data.session_id);
+      }
       
       // Add AI response with emotion data
       setMessages(prev => [...prev, { 

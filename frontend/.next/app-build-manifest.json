@@ -5,11 +5,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
-    "/landing/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/landing/page.js"
-    ],
     "/chat/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -20,15 +15,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...all]/route.js"
     ],
-    "/(auth)/sign-in/page": [
+    "/landing/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(auth)/sign-in/page.js"
-    ],
-    "/(auth)/sign-up/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(auth)/sign-up/page.js"
+      "static/chunks/app/landing/page.js"
     ]
   }
 }
