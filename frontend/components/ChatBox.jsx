@@ -79,11 +79,14 @@ export default function ChatBox() {
   const getEmotionColor = (emotion) => {
     const colors = {
       joy: '#10b981',
-      sadness: '#3b82f6', 
+      happy: '#10b981',
+      sad: '#3b82f6',
+      sadness: '#3b82f6',
+      angry: '#ef4444',
       anger: '#ef4444',
+      anxious: '#8b5cf6',
       fear: '#8b5cf6',
-      surprise: '#f59e0b',
-      disgust: '#84cc16',
+      confused: '#f59e0b',
       neutral: '#6b7280',
       crisis: '#dc2626'
     };
@@ -91,10 +94,20 @@ export default function ChatBox() {
   };
 
   const getSeverityText = (severity) => {
-    if (severity <= 3) return "Low";
-    if (severity <= 6) return "Medium";
-    if (severity <= 8) return "High";
-    return "Critical";
+    // Handle string severity values from backend
+    if (typeof severity === 'string') {
+      return severity.charAt(0).toUpperCase() + severity.slice(1);
+    }
+    
+    // Fallback for numeric values (if any)
+    if (typeof severity === 'number') {
+      if (severity <= 3) return "Low";
+      if (severity <= 6) return "Medium";
+      if (severity <= 8) return "High";
+      return "Critical";
+    }
+    
+    return "Unknown";
   };
 
   return (
