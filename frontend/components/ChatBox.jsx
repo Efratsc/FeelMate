@@ -111,21 +111,40 @@ export default function ChatBox() {
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: "20px auto", fontFamily: "Inter, sans-serif", padding: "0 20px" }}>
-      <div style={{ textAlign: "center", marginBottom: 30 }}>
-        <h1 style={{ color: "#1f2937", marginBottom: 10 }}>🤗 FeelMate Chat</h1>
-        <p style={{ color: "#6b7280", fontSize: "16px" }}>Share your feelings anonymously and get emotional support</p>
+    <div style={{ maxWidth: 900, margin: "20px auto", fontFamily: "Inter, sans-serif", padding: "0 20px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          background: "var(--card)",
+          border: "1px solid var(--border)",
+          borderRadius: 14,
+          padding: "14px 16px",
+          marginBottom: 14
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", display: "grid", placeItems: "center", color: "#fff", fontSize: 18 }}>💜</div>
+          <div>
+            <div style={{ fontWeight: 700, color: "var(--text)" }}>FeelMate</div>
+            <div style={{ fontSize: 12, color: "#059669" }}>online • here to listen</div>
+          </div>
+        </div>
+        <div style={{ fontSize: 12, color: "var(--muted)" }}>Your messages are not shared. This is a judgment‑free space.</div>
       </div>
 
       {/* Chat Messages */}
       <div style={{ 
-        border: "1px solid #e5e7eb", 
-        borderRadius: 12, 
+        border: "1px solid var(--border)", 
+        borderRadius: 16, 
         padding: 20, 
-        minHeight: 400,
-        maxHeight: 500,
+        minHeight: 440,
+        maxHeight: 560,
         overflowY: "auto",
-        backgroundColor: "#fafafa"
+        backgroundColor: "var(--card-solid)",
+        boxShadow: "0 10px 30px rgba(99,102,241,0.05)"
       }}>
         {messages.length === 0 && (
           <div style={{ textAlign: "center", color: "#9ca3af", marginTop: 100 }}>
@@ -145,10 +164,10 @@ export default function ChatBox() {
                 maxWidth: "70%",
                 padding: "12px 16px",
                 borderRadius: m.from === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                backgroundColor: m.from === "user" ? "#4f46e5" : "white",
-                color: m.from === "user" ? "white" : "#1f2937",
-                border: m.from === "user" ? "none" : "1px solid #e5e7eb",
-                boxShadow: m.from === "user" ? "none" : "0 1px 3px rgba(0,0,0,0.1)"
+                backgroundColor: m.from === "user" ? "#4f46e5" : "var(--ai-bubble)",
+                color: m.from === "user" ? "white" : "var(--text)",
+                border: m.from === "user" ? "none" : "1px solid var(--border)",
+                boxShadow: m.from === "user" ? "none" : "0 1px 3px rgba(0,0,0,0.06)"
               }}>
                 <div>{m.text}</div>
                 
@@ -182,8 +201,8 @@ export default function ChatBox() {
 
                 {/* Resources for high severity */}
                 {m.from === "ai" && m.needs_help && m.resources && m.resources.length > 0 && (
-                  <div style={{ marginTop: 12, padding: "8px 12px", backgroundColor: "#fef3c7", borderRadius: 8 }}>
-                    <div style={{ fontSize: "12px", fontWeight: "bold", color: "#92400e", marginBottom: 4 }}>
+                  <div style={{ marginTop: 12, padding: "8px 12px", backgroundColor: "var(--chip)", borderRadius: 8 }}>
+                    <div style={{ fontSize: "12px", fontWeight: "bold", color: "#a78bfa", marginBottom: 4 }}>
                       💡 Resources that might help:
                     </div>
                     {m.resources.map((resource, idx) => (
@@ -192,12 +211,12 @@ export default function ChatBox() {
                           href={resource.url || "#"} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          style={{ color: "#92400e", textDecoration: "underline" }}
+                          style={{ color: "#a78bfa", textDecoration: "underline" }}
                         >
                           {resource.name}
                         </a>
                         {resource.description && (
-                          <span style={{ color: "#92400e", marginLeft: 4 }}>
+                          <span style={{ color: "#a78bfa", marginLeft: 4 }}>
                             - {resource.description}
                           </span>
                         )}
@@ -208,7 +227,7 @@ export default function ChatBox() {
 
                 <div style={{ 
                   fontSize: "10px", 
-                  color: m.from === "user" ? "rgba(255,255,255,0.7)" : "#9ca3af",
+                  color: m.from === "user" ? "rgba(255,255,255,0.7)" : "var(--muted)",
                   marginTop: 4,
                   textAlign: "right"
                 }}>
@@ -243,7 +262,7 @@ export default function ChatBox() {
       </div>
 
       {/* Input Area */}
-      <div style={{ display: "flex", marginTop: 20, gap: 10 }}>
+      <div style={{ display: "flex", marginTop: 14, gap: 10 }}>
         <input 
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -251,29 +270,30 @@ export default function ChatBox() {
           placeholder="Share how you're feeling..."
           disabled={isLoading}
           style={{ 
-            flex: 1, 
-            padding: "12px 16px", 
-            borderRadius: 25, 
-            border: "1px solid #e5e7eb",
+            flex: 1,
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid var(--border)",
             fontSize: "16px",
             outline: "none",
             transition: "border-color 0.2s",
-            backgroundColor: isLoading ? "#f3f4f6" : "white"
+            backgroundColor: isLoading ? "#f3f4f6" : "var(--card-solid)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
           }}
         />
         <button 
           onClick={sendMessage} 
           disabled={isLoading || !input.trim()}
           style={{ 
-            padding: "12px 24px", 
-            borderRadius: 25, 
-            border: "none", 
-            backgroundColor: isLoading || !input.trim() ? "#9ca3af" : "#4f46e5", 
+            padding: "12px 20px",
+            borderRadius: 12,
+            border: "1px solid var(--brand)",
+            backgroundColor: isLoading || !input.trim() ? "#9ca3af" : "var(--brand)",
             color: "white",
-            fontSize: "16px",
-            fontWeight: "500",
+            fontSize: "15px",
+            fontWeight: 600,
             cursor: isLoading || !input.trim() ? "not-allowed" : "pointer",
-            transition: "background-color 0.2s"
+            transition: "background-color 0.2s, transform 0.05s"
           }}
         >
           {isLoading ? "Sending..." : "Send"}

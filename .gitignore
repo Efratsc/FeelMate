@@ -1,21 +1,60 @@
-# dependencies
-/node_modules
+# ========================
+# Dependencies
+# ========================
+node_modules/
+  
+# ========================
+# Production build outputs
+# ========================
+.next/
+out/
+dist/
 
-# production
-/.next
-/out
-
-# debug
+# ========================
+# Logs
+# ========================
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# local env files
+# ========================
+# Environment files
+# ========================
 .env
+.venv
 .env.development.local
 .env.test.local
 .env.production.local
 .env.template
 
-# misc
+# ========================
+# Package manager lock files
+# ========================
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ========================
+# Editor / IDE
+# ========================
+.vscode/
+.idea/
+*.swp
+
+# ========================
+# Test coverage
+# ========================
+coverage/
+
+# ========================
+# Misc / OS
+# ========================
 .DS_Store
+Thumbs.db
+
+# ========================
+# Custom unnecessary files
+# ========================
+setup_feelmate.sh
+run_all.bat

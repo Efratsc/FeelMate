@@ -1,53 +1,45 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Configuration settings for FeelMate Backend
+Production configuration for FeelMate Emotion-Aware Chatbot
 """
 
-# Session Management
-SESSION_TIMEOUT_MINUTES = 30  # Sessions expire after 30 minutes of inactivity
-SESSION_CLEANUP_INTERVAL_HOURS = 24  # Clean up old sessions every 24 hours
+import os
+from pathlib import Path
+
+# Base directory
+BASE_DIR = Path(__file__).parent
 
 # Server Configuration
-SERVER_HOST = "0.0.0.0"
-SERVER_PORT = 8001
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", 8001))
 
-# Database Configuration
-DATABASE_URL = None  # Will be loaded from .env file
+# Model Configuration
+EMOTION_MODEL = os.getenv("EMOTION_MODEL", "j-hartmann/emotion-english-distilroberta-base")
+DEVICE = os.getenv("DEVICE", "cpu")
 
-# Emotion Classification
-EMOTION_CONFIDENCE_THRESHOLD = 0.3  # Minimum confidence for emotion classification
-MAX_CONVERSATION_HISTORY = 10  # Number of recent messages to consider for context
+# Memory Configuration
+MEMORY_FILE = os.getenv("MEMORY_FILE", "data/conversation_memory.json")
+MAX_MEMORY_MESSAGES = int(os.getenv("MAX_MEMORY_MESSAGES", 5))
 
-# Crisis Detection
-CRISIS_PHRASES = [
-    'kill myself', 'kill my self', 'want to die', 'end my life', 'end it all',
-    'no reason to live', 'better off dead', 'hurt myself', 'self harm',
-    'suicide', 'give up', 'cant take it anymore', 'wanna kill', 'want to kill'
+# Logging Configuration
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOG_FILE = os.getenv("LOG_FILE", "logs/chatbot.log")
+
+# Frontend Configuration
+FRONTEND_URLS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
 ]
 
-# Resource URLs
-CRISIS_RESOURCES = [
-    {
-        "title": "National Suicide Prevention Lifeline",
-        "description": "24/7 crisis support",
-        "url": "https://988lifeline.org/",
-        "phone": "988",
-        "type": "crisis"
-    },
-    {
-        "title": "Crisis Text Line",
-        "description": "Text-based crisis support",
-        "url": "https://www.crisistextline.org/",
-        "text": "HOME to 741741",
-        "type": "crisis"
-    },
-    {
-        "title": "Find a Therapist",
-        "description": "Professional mental health support",
-        "url": "https://www.psychologytoday.com/us/therapists",
-        "type": "therapy"
-    }
+# Crisis Detection Configuration
+CRISIS_KEYWORDS = [
+    "suicide", "kill myself", "end my life", "want to die",
+    "hopeless", "worthless", "no reason to live", "better off dead",
+    "self-harm", "cut myself", "overdose", "harm myself",
+    "can't take it anymore", "life is meaningless"
 ]
+
+# Production Settings
+DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+RELOAD = DEBUG  # Only reload in debug mode
 
 

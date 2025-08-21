@@ -1,4 +1,7 @@
 {
   "/api/auth/[...all]/route": "app/api/auth/[...all]/route.js",
-  "/chat/page": "app/chat/page.js"
+  "/landing/page": "app/landing/page.js",
+  "/(auth)/sign-up/page": "app/(auth)/sign-up/page.js",
+  "/chat/page": "app/chat/page.js",
+  "/(auth)/sign-in/page": "app/(auth)/sign-in/page.js"
 }
