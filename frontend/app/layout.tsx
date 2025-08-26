@@ -8,9 +8,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const stored = typeof window !== 'undefined' ? window.localStorage.getItem('feelm-theme') : null;
+    setMounted(true);
+    const stored = window.localStorage.getItem('feelm-theme');
     if (stored === 'dark' || stored === 'light') {
       setTheme(stored);
     } else if (window?.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -21,10 +23,46 @@ export default function RootLayout({
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('feelm-theme', next);
-    }
+    window.localStorage.setItem('feelm-theme', next);
   };
+
+  // Prevent hydration mismatch by not rendering theme-dependent content until mounted
+  if (!mounted) {
+    return (
+      <html lang="en">
+        <head>
+          <style>{`
+            :root {
+              --page-bg: linear-gradient(160deg, #f0f7ff 0%, #f8f5ff 60%, #fff8f0 100%);
+              --text: #111827;
+              --muted: #6b7280;
+              --border: rgba(0,0,0,0.06);
+              --card: rgba(255,255,255,0.7);
+              --card-solid: #ffffff;
+              --brand: #111827;
+              --accent: #6366f1;
+              --chip: #eef2ff;
+              --ai-bubble: #f9fafb;
+            }
+            * { box-sizing: border-box; }
+          `}</style>
+        </head>
+        <body
+          style={{
+            margin: 0,
+            background: 'var(--page-bg)',
+            color: 'var(--text)',
+            fontFamily: "Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <main style={{ flex: 1 }}>{children}</main>
+        </body>
+      </html>
+    );
+  }
 
   return (
     <html lang="en" data-theme={theme}>

@@ -1,24 +1,13 @@
-"use client";
-import { useSession } from "../lib/auth-client";
+﻿"use client";
+import { useState } from "react";
 import ChatBox from "../../components/ChatBox";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import AuthGuard from "../../components/AuthGuard";
+import UserProfile from "../../components/UserProfile";
 
 export default function ChatPage() {
-  const { data, isPending } = useSession();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isPending && !data) {
-      router.push("/sign-in");
-    }
-  }, [data, isPending, router]);
-
-  if (isPending) return <p style={{ textAlign: "center", padding: 24 }}>Loading...</p>;
-  if (!data) return null; // waiting for redirect
-
+  const [showSidebar, setShowSidebar] = useState(false);
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 20px" }}>
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 20px" }}>
       <div
         style={{
           marginBottom: 16,
@@ -33,9 +22,52 @@ export default function ChatPage() {
         }}
       >
         <span style={{ fontSize: 18 }}>🫶</span>
-        <span style={{ fontSize: 14 }}>This is a safe, supportive space. You can share as much or as little as you want.</span>
+        <span style={{ fontSize: 14 }}>
+          This is a safe, supportive space. You can share as much or as little as you want.
+        </span>
       </div>
-      <ChatBox />
+      <AuthGuard>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: showSidebar ? "300px 1fr" : "1fr",
+            gap: 16,
+            alignItems: "start"
+          }}
+        >
+          {showSidebar && (
+            <div style={{ position: "sticky", top: 20 }}>
+              <UserProfile />
+            </div>
+          )}
+          <div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 8
+              }}
+            >
+              <div />
+              <button
+                onClick={() => setShowSidebar(!showSidebar)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 10,
+                  border: "1px solid var(--border)",
+                  background: "var(--card)",
+                  color: "var(--text)",
+                  cursor: "pointer"
+                }}
+              >
+                {showSidebar ? "Hide Panel" : "Show Panel"}
+              </button>
+            </div>
+            <ChatBox />
+          </div>
+        </div>
+      </AuthGuard>
     </div>
   );
 }

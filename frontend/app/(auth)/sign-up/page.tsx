@@ -20,7 +20,7 @@ export default function SignUpPage() {
         email: email,
         password: password,
         name: "anonymous",
-        callbackURL: "/chat",
+        callbackURL: "/sign-in", // redirect to sign-in after successful sign-up  
       });
       
       // If we reach here, user creation was successful

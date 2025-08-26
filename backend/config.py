@@ -21,7 +21,7 @@ MEMORY_FILE = os.getenv("MEMORY_FILE", "data/conversation_memory.json")
 MAX_MEMORY_MESSAGES = int(os.getenv("MAX_MEMORY_MESSAGES", 5))
 
 # Logging Configuration
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
 LOG_FILE = os.getenv("LOG_FILE", "logs/chatbot.log")
 
 # Frontend Configuration

@@ -1,13 +1,27 @@
 import { useState } from "react";
+import { useSession } from "../app/lib/auth-client";
+
 
 export default function ChatBox() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
-
+  const { session, isLoading: sessionLoading } = useSession();
+  const userId = session?.user?.id; // Get the authenticated user ID
   const sendMessage = async () => {
     if (!input.trim()) return;
+    
+    // Check if user is authenticated
+    if (!userId) {
+      setMessages(prev => [...prev, { 
+        text: "Please sign in to start chatting with FeelMate.",
+        from: "ai",
+        error: true,
+        timestamp: new Date().toLocaleTimeString()
+      }]);
+      return;
+    }
     
     const userMessage = input.trim();
     setInput("");
@@ -28,7 +42,7 @@ export default function ChatBox() {
         },
         body: JSON.stringify({
           message: userMessage,
-          user_id: "user-123", // You can get this from auth context
+          user_id: userId, // Use the authenticated user ID
           session_id: sessionId // Use existing session or null for new session
         })
       });
@@ -110,6 +124,53 @@ export default function ChatBox() {
     return "Unknown";
   };
 
+  // Show loading state while checking authentication
+  if (sessionLoading) {
+    return (
+      <div style={{ maxWidth: 900, margin: "20px auto", fontFamily: "Inter, sans-serif", padding: "0 20px" }}>
+        <div style={{ textAlign: "center", padding: "40px 20px" }}>
+          <div style={{ fontSize: "18px", color: "var(--text)" }}>Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show sign-in prompt if not authenticated
+  if (!userId) {
+    return (
+      <div style={{ maxWidth: 900, margin: "20px auto", fontFamily: "Inter, sans-serif", padding: "0 20px" }}>
+        <div style={{ 
+          textAlign: "center", 
+          padding: "40px 20px",
+          background: "var(--card)",
+          border: "1px solid var(--border)",
+          borderRadius: 16
+        }}>
+          <div style={{ fontSize: "24px", fontWeight: "bold", color: "var(--text)", marginBottom: "16px" }}>
+            Welcome to FeelMate 💜
+          </div>
+          <div style={{ fontSize: "16px", color: "var(--muted)", marginBottom: "24px" }}>
+            Please sign in to start chatting with your AI friend
+          </div>
+          <a 
+            href="/sign-in" 
+            style={{
+              display: "inline-block",
+              padding: "12px 24px",
+              backgroundColor: "#4f46e5",
+              color: "white",
+              textDecoration: "none",
+              borderRadius: "8px",
+              fontWeight: "500"
+            }}
+          >
+            Sign In
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: 900, margin: "20px auto", fontFamily: "Inter, sans-serif", padding: "0 20px" }}>
       <div
@@ -132,7 +193,18 @@ export default function ChatBox() {
             <div style={{ fontSize: 12, color: "#059669" }}>online • here to listen</div>
           </div>
         </div>
-        <div style={{ fontSize: 12, color: "var(--muted)" }}>Your messages are not shared. This is a judgment‑free space.</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ fontSize: 12, color: "var(--muted)" }}>Your messages are not shared. This is a judgment‑free space.</div>
+          <div style={{ 
+            fontSize: 12, 
+            color: "var(--muted)",
+            padding: "4px 8px",
+            backgroundColor: "var(--muted-bg)",
+            borderRadius: "6px"
+          }}>
+            Signed in as: {session?.user?.email || 'User'}
+          </div>
+        </div>
       </div>
 
       {/* Chat Messages */}
