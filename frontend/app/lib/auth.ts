@@ -6,35 +6,8 @@ export const auth = betterAuth({
     enabled: true,
   },
   database: new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_URL, // Use from .env
   }),
-  // Custom table configuration to match existing database schema
-  tables: {
-    user: "user", // Use existing 'user' table instead of 'users'
-    session: "session", // Use existing 'session' table
-    verification: "verification", // Use existing 'verification' table
-  },
-  // Map column names to match existing schema
-  columns: {
-    user: {
-      id: "id",
-      email: "email",
-      hashedPassword: "hashedPassword", // This might not exist, we'll need to add it
-      name: "name",
-      emailVerified: "emailVerified",
-      image: "image",
-      createdAt: "createdAt",
-      updatedAt: "updatedAt",
-    },
-    session: {
-      id: "id",
-      userId: "userId",
-      expiresAt: "expiresAt",
-    },
-    verification: {
-      id: "id",
-      userId: "userId",
-      expiresAt: "expiresAt",
-    },
-  },
+  secret: process.env.BETTER_AUTH_SECRET,
+  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL,
 });

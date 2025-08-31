@@ -1,7 +1,7 @@
 "use client";
 import { authClient } from "../../lib/auth-client";
 import { useRouter } from "next/navigation";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react"; // Removed useEffect import
 
 export default function SignInPage() {
   const router = useRouter();
@@ -9,41 +9,18 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
 
-  // Check if user is already authenticated
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const session = await authClient.getSession();
-        if (session) {
-          console.log("User already authenticated, redirecting to chat");
-          router.push('/chat');
-        }
-      } catch (err) {
-        console.log("No existing session found");
-      }
-    };
-    
-    checkAuth();
-  }, [router]);
+  // REMOVED: The useEffect session check entirely
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
-    setIsSuccess(false);
     
     try {
-      await authClient.signIn(email, password);
-      
-      console.log("Sign in successful");
-      setIsSuccess(true);
-      
-      // Wait a moment for the session to be established, then redirect
-      setTimeout(() => {
-        router.push('/chat');
-      }, 1000);
+      await authClient.signIn.email({ email, password });
+      console.log("Sign in successful - redirecting to chat");
+      router.push('/chat');
       
     } catch (err: any) {
       console.error("Sign in error:", err);
@@ -78,34 +55,19 @@ export default function SignInPage() {
           <p style={{ margin: 0, color: "#6b7280", fontSize: 13 }}>You are safe here. Your privacy matters.</p>
         </div>
         
-        {isSuccess && (
-          <div style={{ 
-            color: "#059669", 
-            marginBottom: 8, 
-            textAlign: "center", 
-            fontSize: 13,
-            padding: "8px 12px",
-            backgroundColor: "#ecfdf5",
-            borderRadius: "6px",
-            border: "1px solid #a7f3d0"
-          }}>
-            ✅ Sign in successful! Redirecting to chat...
-          </div>
-        )}
-        
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
-          disabled={isLoading || isSuccess}
+          disabled={isLoading}
           style={{
             padding: "12px",
             borderRadius: 8,
             border: "1px solid #e5e7eb",
             fontSize: 16,
-            opacity: (isLoading || isSuccess) ? 0.7 : 1,
+            opacity: isLoading ? 0.7 : 1,
           }}
         />
         <input
@@ -114,31 +76,31 @@ export default function SignInPage() {
           value={password}
           onChange={e => setPassword(e.target.value)}
           required
-          disabled={isLoading || isSuccess}
+          disabled={isLoading}
           style={{
             padding: "12px",
             borderRadius: 8,
             border: "1px solid #e5e7eb",
             fontSize: 16,
-            opacity: (isLoading || isSuccess) ? 0.7 : 1,
+            opacity: isLoading ? 0.7 : 1,
           }}
         />
         <button
           type="submit"
-          disabled={isLoading || isSuccess}
+          disabled={isLoading}
           style={{
             padding: "12px",
             borderRadius: 8,
             border: "1px solid #111827",
-            backgroundColor: (isLoading || isSuccess) ? "#9ca3af" : "#111827",
+            backgroundColor: isLoading ? "#9ca3af" : "#111827",
             color: "#fff",
             fontWeight: 600,
             fontSize: 16,
-            cursor: (isLoading || isSuccess) ? "not-allowed" : "pointer",
+            cursor: isLoading ? "not-allowed" : "pointer",
             transition: "0.3s",
           }}
         >
-          {isLoading ? "Signing In..." : isSuccess ? "Success!" : "Sign In"}
+          {isLoading ? "Signing In..." : "Sign In"}
         </button>
         {error && (
           <div style={{ color: "#b91c1c", marginTop: 8, textAlign: "center", fontSize: 13 }}>
