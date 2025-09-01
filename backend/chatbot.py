@@ -4,6 +4,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from collections import Counter
 
 from transformers import pipeline
 from langchain_community.llms import HuggingFacePipeline
@@ -42,7 +43,7 @@ class EmotionAwareChatbot:
             "text-generation",
             model="distilgpt2",
             device=-1,
-            max_new_tokens=150,
+            max_new_tokens=100,  # Reduced from 150 to prevent rambling
             pad_token_id=50256,
             do_sample=True,
             top_p=0.9,
@@ -51,16 +52,22 @@ class EmotionAwareChatbot:
         self.gpt2_llm = HuggingFacePipeline(pipeline=gpt2_pipeline)
         print("✅ GPT-2 loaded")
 
-        # LangChain prompt template with warm, concise guidance
+        # LangChain prompt template with strict constraints
         self.prompt_template = PromptTemplate(
             input_variables=["history", "user_message", "emotion", "session_context"],
             template=(
                 "You are FeelMate, a supportive AI friend. Be warm, validating, and concise.\n"
-                "Guidelines: 1-3 sentences, no lists, no repeating words, reflect their feeling, ask a gentle follow-up.\n"
+                "**STRICT RULES:** \n"
+                "- Respond in 1-2 short sentences maximum\n"
+                "- Never repeat words or phrases\n"
+                "- Never use lists or markdown\n"
+                "- Never mention you're an AI\n"
+                "- Reflect their feeling first, then ask one gentle question\n"
+                "- If you start repeating, STOP and end the response\n\n"
                 "Detected emotion: {emotion}. Context: {session_context}.\n\n"
-                "Conversation so far:\n{history}\n\n"
+                "Conversation history:\n{history}\n\n"
                 "User: {user_message}\n"
-                "FeelMate: "
+                "FeelMate: [1-2 sentence response]"
             )
         )
 
@@ -97,6 +104,44 @@ class EmotionAwareChatbot:
         ]
 
         print("✅ Emotion-aware chatbot initialized with PostgreSQL memory!")
+
+    def _validate_response(self, response: str) -> bool:
+        """Validate that the response is actually good and not repetitive nonsense"""
+        if not response or len(response) < 10:
+            return False
+        
+        # Check for repetitive patterns
+        words = response.split()
+        if len(words) < 3:  # Too short
+            return False
+        
+        # Check for word repetition (more than 2 repeats of any word)
+        word_counts = Counter(words)
+        if any(count > 2 for count in word_counts.values()):
+            return False
+        
+        # Check for phrase repetition
+        if len(response) > 20 and response.count(response[:20]) > 1:  # Same phrase repeated
+            return False
+        
+        # Check for common bad patterns
+        bad_patterns = [
+            "i'm not a", "i'm not an", "i am not a", 
+            "i'm a friend", "i'm a person", "i'm a very",
+            "~~~", "***", "###",  # Weird formatting
+            "language model", "as an ai", "openai",
+            "respond supportively", "conversation history"
+        ]
+        
+        response_lower = response.lower()
+        if any(pattern in response_lower for pattern in bad_patterns):
+            return False
+        
+        # Check for excessive punctuation or weird characters
+        if response.count('.') > 3 and len(words) < 8:  # Too many periods for short text
+            return False
+            
+        return True
 
     # --- Emotion detection ---
     def _detect_emotion(self, message):
@@ -243,13 +288,11 @@ class EmotionAwareChatbot:
             # Clean up repetitive words/phrases and emotion echoes like "anger, anger"
             def _dedupe_repeats(text: str) -> str:
                 # Collapse repeated words (up to 3 times) and comma-separated repeats
-                import re as _re
-                # e.g., anger, anger, anger -> anger
-                text = _re.sub(r"\b(\w+)(?:\s*,\s*\1\b)+", r"\1", text, flags=_re.IGNORECASE)
+                text = re.sub(r"\b(\w+)(?:\s*,\s*\1\b)+", r"\1", text, flags=re.IGNORECASE)
                 # e.g., anger anger anger -> anger
-                text = _re.sub(r"\b(\w+)(?:\s+\1\b){1,}\b", r"\1", text, flags=_re.IGNORECASE)
+                text = re.sub(r"\b(\w+)(?:\s+\1\b){1,}\b", r"\1", text, flags=re.IGNORECASE)
                 # Remove redundant underscores or leading artifacts
-                text = _re.sub(r"^[_\-\s]+", "", text)
+                text = re.sub(r"^[_\-\s]+", "", text)
                 return text.strip()
 
             ai_response = _dedupe_repeats(ai_response)
@@ -258,30 +301,9 @@ class EmotionAwareChatbot:
             if len(ai_response) >= 50 and ai_response.count(ai_response[:50]) > 1:
                 ai_response = ai_response[:200].rstrip() + "..."
             
-            # Additional quality filters for GPT-2 outputs
-            def _looks_low_quality(text: str) -> bool:
-                t = (text or "").lower()
-                bad_fragments = [
-                    "i've never heard of it",
-                    "ive never heard of it",
-                    "feelmate",  # hallucinating name often in odd contexts
-                    "feel ",     # clipped token often appears as "feel"
-                    "http://", "https://",  # prevent random links from gpt2
-                    "as an ai", "language model"
-                ]
-                if any(bad in t for bad in bad_fragments):
-                    return True
-                if len(t.split()) <= 3:
-                    return True
-                # Too many repeated characters
-                if re.search(r"(.)\1{4,}", t):
-                    return True
-                return False
-
-            # Check if GPT-2 response is usable
-            if (not ai_response or len(ai_response) < 10 or 
-                ai_response.count(ai_response[:20]) > 1 or _looks_low_quality(ai_response)):
-                # GPT-2 response is poor, use template instead
+            # Validate the response quality
+            if not self._validate_response(ai_response):
+                print("❌ GPT-2 generated invalid response, using fallback")
                 ai_response = ""
             
         except Exception as e:
@@ -304,39 +326,36 @@ class EmotionAwareChatbot:
         elif not ai_response:
             # Empathetic fallback generator
             def empathetic_fallback(e: str, user_text: str) -> str:
-                t = (user_text or "").strip()
-                if len(t) > 180:
-                    t = t[:180].rstrip() + "..."
-                q = t.lower()
-                # Actionable follow-ups for direct help requests
-                if any(phrase in q for phrase in ["what should i do", "what do i do", "how can i", "help me", "what next"]):
-                    if e in ["sadness", "fear", "anger", "disgust", "surprise", "neutral"]:
-                        return (
-                            "Thank you for asking. One small step now could help: would it feel okay to write down what happened,"
-                            " or message someone you trust, or take a short walk to settle your body? Which of these feels most doable?"
-                        )
-                # If user says we didn't answer, return to last user point
-                if any(phrase in q for phrase in ["you didn't answer", "you did not answer", "answer the previous", "you didnt answer"]):
-                    ref = (last_user_text or "that last point").strip()
-                    if len(ref) > 120:
-                        ref = ref[:120].rstrip() + "..."
-                    return f"You're right—let me come back to what you shared about '{ref}'. What part of that feels heaviest right now?"
-                # Targeted compassion for self-worth themes
-                if any(phrase in q for phrase in ["not good enough", "i'm not enough", "im not enough", "i am not enough"]):
-                    return "Hearing that makes sense after being insulted. Your worth isn’t defined by others’ judgments. What did that comment touch in you?"
-                if e == 'sadness':
-                    return f"That sounds really hard. It makes sense you'd feel sad about that. What would feel most supportive right now?"
-                if e == 'fear':
-                    return "Feeling scared can be exhausting. What part of this feels most worrying for you?"
-                if e == 'anger':
-                    return "I hear the anger there—your reaction is understandable. What happened that hurt the most?"
-                if e == 'disgust':
-                    return "That reaction makes sense given what you described. What about it feels most upsetting?"
-                if e == 'surprise':
-                    return "That sounds unexpected. What surprised you the most about it?"
-                if e == 'joy':
-                    return "I'm glad there's a bit of light here. What about this is bringing you joy?"
-                return "I'm here with you. What feels most important to share next?"
+                user_text_lower = (user_text or "").lower()
+                
+                # Specific responses for common patterns
+                if any(word in user_text_lower for word in ["sad", "depressed", "unhappy", "down"]):
+                    return "I hear that you're feeling down. Would it help to talk more about what's weighing on you?"
+                
+                if any(word in user_text_lower for word in ["anxious", "nervous", "worried", "stressed"]):
+                    return "That sounds really stressful. What's feeling most overwhelming right now?"
+                
+                if any(word in user_text_lower for word in ["angry", "mad", "frustrated", "upset"]):
+                    return "I can understand feeling upset about that. What happened that's bothering you the most?"
+                
+                if any(word in user_text_lower for word in ["lonely", "alone", "isolated"]):
+                    return "Feeling lonely can be really tough. Would you like to share what's been on your mind?"
+                
+                if any(word in user_text_lower for word in ["tired", "exhausted", "burned out", "burnout"]):
+                    return "That sounds exhausting. What's been draining your energy lately?"
+                
+                # General empathetic responses by emotion
+                emotion_responses = {
+                    'sadness': "That sounds really difficult. I'm here to listen if you want to share more.",
+                    'fear': "That sounds scary. What part is feeling most frightening?",
+                    'anger': "I hear your frustration. That sounds really upsetting.",
+                    'disgust': "That sounds really unpleasant. What's been bothering you?",
+                    'surprise': "That sounds unexpected. What surprised you the most?",
+                    'joy': "I'm glad to hear that! What's bringing you joy right now?",
+                    'neutral': "Thanks for sharing. How are you feeling about this?"
+                }
+                
+                return emotion_responses.get(e, "I'm here to listen. What would you like to talk about?")
 
             ai_response = empathetic_fallback(emotion, user_message)
         

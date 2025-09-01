@@ -20,12 +20,14 @@ export default function SignUpPage() {
         email: email,
         password: password,
         name: "anonymous",
-        callbackURL: "/sign-in", // redirect to sign-in after successful sign-up  
+        // REMOVED: callbackURL: "/sign-in" - better-auth handles this automatically
       });
       
-      // If we reach here, user creation was successful
-      // The authClient will handle the redirect automatically
+      // If we reach here, user creation AND session creation were successful
       console.log("Sign up successful:", result);
+      
+      // Redirect to chat immediately - user is already logged in!
+      router.push('/chat');
       
     } catch (err: any) {
       console.error("Sign up error:", err);
