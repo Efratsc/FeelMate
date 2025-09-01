@@ -1,34 +1,27 @@
 """
 Production FastAPI server for FeelMate Emotion-Aware Chatbot
+CPU-only version with PostgreSQL LangChain memory integration
 """
 
-import asyncio
 import logging
-import os
-import sys
-from datetime import datetime
-from typing import Dict, Any, Optional
-
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-
-# Import LangGraph pipeline
-from app.ml.graph_pipeline import get_graph
-
-# Import configuration
+from typing import List, Optional, Dict
+from chatbot import get_chatbot, ChatResponse
 from config import FRONTEND_URLS, HOST, PORT, RELOAD, LOG_LEVEL
+from postgres_memory import cleanup_expired_sessions
+from user_session import get_user_session_manager
 
 # Configure logging
-logging.basicConfig(level=getattr(logging, LOG_LEVEL.upper()))
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize FastAPI app
+# FastAPI app
 app = FastAPI(
-    title="FeelMate API",
-    description="AI-powered emotional support chatbot with emotion detection",
+    title="FeelMate Emotion-Aware Chatbot",
+    description="Production-ready supportive chatbot with PostgreSQL LangChain memory",
     version="1.0.0"
 )
 
@@ -41,135 +34,184 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize LangGraph
-graph = get_graph()
+# Global instances
+chatbot = get_chatbot()
+user_session_manager = get_user_session_manager()
 
 # Pydantic models
-class ChatRequest(BaseModel):
+class ChatMessage(BaseModel):
     message: str
     session_id: Optional[str] = None
+    user_id: str
 
-class ChatResponse(BaseModel):
-    response: str
-    emotion: Optional[str] = None
-    severity: Optional[str] = None
-    confidence: Optional[float] = None
-    needs_help: Optional[bool] = None
-    resources: Optional[list] = None
-    session_id: Optional[str] = None
+class SessionInfo(BaseModel):
+    session_id: str
+    user_id: str
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    last_activity: Optional[str] = None
+    current_emotion: Optional[str] = None
+    severity_level: Optional[str] = None
+    is_active: bool = True
+    message_count: int = 0
 
-# Health check endpoint
+class ConversationHistory(BaseModel):
+    session_id: str
+    messages: List[Dict[str, str]]
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info("🚀 Starting FeelMate Production Emotion-Aware Chatbot...")
+    logger.info("✅ Server ready to accept requests")
+    logger.info("💡 Using CPU-only emotion detection with GPT-2")
+    logger.info("🗄️ PostgreSQL LangChain memory integration active")
+
+@app.get("/")
+async def root():
+    return {
+        "message": "FeelMate Emotion-Aware Chatbot API",
+        "version": "1.0.0",
+        "status": "production",
+        "features": [
+            "CPU-only emotion detection",
+            "PostgreSQL LangChain memory",
+            "Intelligent response templates",
+            "Crisis detection",
+            "Conversation memory",
+            "Resource recommendations"
+        ],
+        "endpoints": {
+            "/api/chat/send-message": "POST - Send a message and get response",
+            "/api/chat/session/{session_id}": "GET - Get session information",
+            "/api/chat/history/{session_id}": "GET - Get conversation history",
+            "/api/chat/sessions/{user_id}": "GET - Get user's active sessions",
+            "/health": "GET - Check server health",
+            "/docs": "GET - API documentation"
+        }
+    }
+
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "service": "FeelMate API",
+        "service": "FeelMate Production Chatbot",
+        "model": "CPU-only emotion detection with PostgreSQL memory",
         "version": "1.0.0"
     }
 
-# Root endpoint
-@app.get("/")
-async def root():
-    """Root endpoint with API information"""
-    return {
-        "message": "FeelMate API - AI-powered emotional support chatbot",
-        "version": "1.0.0",
-        "features": [
-            "Emotion detection using HuggingFace models",
-            "LLM-free LangGraph conversation pipeline",
-            "Crisis detection and intervention",
-            "Personalized contextual responses",
-            "Real-time streaming chat interface"
-        ],
-        "endpoints": {
-            "chat": "/api/chat",
-            "health": "/health",
-            "docs": "/docs"
-        }
-    }
-
-# Main chat endpoint
-@app.post("/api/chat", response_model=ChatResponse)
-async def send_message(request: ChatRequest):
-    """Send a message to the FeelMate chatbot"""
+@app.post("/api/chat/send-message")
+async def send_message(request: ChatMessage):
+    """
+    Main chat endpoint with PostgreSQL LangChain memory integration
+    NOW: Trusts that user is already authenticated by better-auth
+    """
     try:
-        # Validate input
-        if not request.message.strip():
-            raise HTTPException(status_code=400, detail="Message cannot be empty")
+        # Since better-auth already authenticated the user, we trust the user_id
+        # Skip additional validation for now to avoid double authentication
+        logger.info(f"Chat request from user ID: {request.user_id}")
         
-        # Process message through LangGraph pipeline
-        result = graph.run({
-            "message": request.message,
-            "session_id": request.session_id or "default"
-        })
-        
-        # Return response with metadata
-        return ChatResponse(
-            response=result.response,
-            emotion=result.emotion,
-            severity=result.severity,
-            confidence=result.confidence,
-            needs_help=result.needs_help,
-            resources=result.resources,
-            session_id=result.session_id
+        # Process chat request directly
+        response = chatbot.chat(
+            user_message=request.message,
+            user_id=request.user_id,
+            session_id=request.session_id
         )
-        
+
+        return {
+            "response": response.response,
+            "emotion": response.emotion,
+            "severity": response.severity,
+            "crisis_detected": response.crisis_detected,
+            "session_id": response.session_id,
+            "user_info": {
+                "user_id": request.user_id,
+                "email": f"user_{request.user_id}@feelmate.com"  # Placeholder
+            }
+        }
+
     except Exception as e:
-        logger.error(f"Error processing message: {e}")
+        logger.error(f"Error in chat endpoint: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-# Get conversation history for a session
-@app.get("/api/chat/history/{session_id}")
-async def get_conversation_history(session_id: str):
-    """Get conversation history for a specific session"""
+@app.get("/api/chat/session/{session_id}")
+async def get_session_info(session_id: str, user_id: str):
+    """
+    Get detailed session information
+    """
     try:
-        history = graph.get_conversation_history(session_id)
-        return {
-            "session_id": session_id,
-            "history": history,
-            "message_count": len(history)
-        }
+        session_info = chatbot.get_session_info(session_id, user_id)
+        return SessionInfo(**session_info)
+    except Exception as e:
+        logger.error(f"Error getting session info: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get session information")
+
+@app.get("/api/chat/history/{session_id}")
+async def get_conversation_history(session_id: str, user_id: str):
+    """
+    Get conversation history for a specific session
+    """
+    try:
+        messages = chatbot.get_conversation_history(session_id, user_id)
+        return ConversationHistory(session_id=session_id, messages=messages)
     except Exception as e:
         logger.error(f"Error getting conversation history: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get conversation history: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get conversation history")
 
-# Clear conversation history for a session
-@app.delete("/api/chat/history/{session_id}")
-async def clear_conversation_history(session_id: str):
-    """Clear conversation history for a specific session"""
+@app.get("/api/chat/sessions/{user_id}")
+async def get_user_sessions(user_id: str):
+    """
+    Get all active sessions for a user
+    """
     try:
-        graph.clear_conversation(session_id)
+        # Get user's chat history without additional validation
+        sessions = user_session_manager.get_user_chat_history(user_id=user_id, limit=20)
+        
         return {
-            "message": f"Conversation history cleared for session {session_id}",
-            "session_id": session_id
+            "user_id": user_id,
+            "user_email": f"user_{user_id}@feelmate.com",  # Placeholder
+            "active_sessions": sessions,
+            "total_sessions": len(sessions)
         }
     except Exception as e:
-        logger.error(f"Error clearing conversation history: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to clear conversation history: {str(e)}")
+        logger.error(f"Error getting user sessions: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get user sessions")
 
-# Error handler
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    """Global exception handler"""
-    logger.error(f"Unhandled exception: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error"}
-    )
+@app.post("/api/chat/cleanup-sessions")
+async def cleanup_sessions():
+    """
+    Clean up expired sessions (admin endpoint)
+    """
+    try:
+        cleanup_expired_sessions(timeout_minutes=30)
+        return {"message": "Session cleanup completed", "status": "success"}
+    except Exception as e:
+        logger.error(f"Error cleaning up sessions: {e}")
+        raise HTTPException(status_code=500, detail="Failed to cleanup sessions")
+
+@app.post("/api/chat/cleanup-user-sessions/{user_id}")
+async def cleanup_user_sessions(user_id: str):
+    """
+    Clean up expired sessions for a specific user
+    """
+    try:
+        # Clean up user's expired sessions without validation
+        cleaned_count = user_session_manager.cleanup_user_sessions(user_id=user_id, timeout_hours=24)
+        
+        return {
+            "message": f"Cleaned up {cleaned_count} expired sessions",
+            "user_id": user_id,
+            "cleaned_count": cleaned_count,
+            "status": "success"
+        }
+    except Exception as e:
+        logger.error(f"Error cleaning up user sessions: {e}")
+        raise HTTPException(status_code=500, detail="Failed to cleanup user sessions")
 
 if __name__ == "__main__":
-    logger.info("🚀 Starting FeelMate Emotion-Aware Chatbot...")
-    logger.info("🧠 AI Mode: LangGraph (LLM-free)")
-    logger.info(f"📍 Server will be available at: http://{HOST}:{PORT}")
-    logger.info(f"📚 API documentation: http://{HOST}:{PORT}/docs")
-    logger.info(f"🏥 Health check: http://{HOST}:{PORT}/health")
-    
     uvicorn.run(
         "server:app",
         host=HOST,
         port=PORT,
         reload=RELOAD,
-        log_level=LOG_LEVEL.lower()
+        log_level=LOG_LEVEL
     )

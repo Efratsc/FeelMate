@@ -13,7 +13,7 @@ def check_dependencies():
     """Check if all required dependencies are installed"""
     required_packages = [
         'fastapi', 'uvicorn', 'pydantic', 'transformers', 
-        'torch', 'langchain', 'langchain_community', 'langgraph'
+        'torch', 'langchain', 'langchain_community'
     ]
     
     missing_packages = []
@@ -54,10 +54,6 @@ def check_port_availability(port=8001):
 def start_server():
     """Start the production server"""
     print("\n🚀 Starting FeelMate Production Emotion-Aware Chatbot...")
-    
-    # Always using LangGraph (LLM-free)
-    print(f"🧠 AI Mode: LangGraph (LLM-free)")
-    
     print("📍 Server will be available at: http://localhost:8001")
     print("📚 API documentation: http://localhost:8001/docs")
     print("🏥 Health check: http://localhost:8001/health")
