@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Version History
 
 ### Version 1.0.0
-- **Release Date**: December 19, 2024
+- **Release Date**: september 1, 2025
 - **Status**: Stable Release
 - **Features**: Core emotional support chatbot functionality
 - **Architecture**: LLM-free LangGraph pipeline with emotion detection

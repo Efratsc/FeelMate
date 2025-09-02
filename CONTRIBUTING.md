@@ -54,7 +54,7 @@ npm run dev
 ```bash
 cd backend
 pip install -r requirements.txt
-python start_production.py
+python -m uvicorn server_langgraph:app --host 0.0.0.0 --port 8001 --reload
 ```
 
 ### Environment Configuration
@@ -175,16 +175,13 @@ FeelMate/
 ├── frontend/                 # Next.js frontend application
 │   ├── components/          # React components
 │   ├── app/                # Next.js app directory
-│   ├── styles/             # CSS and styling
 │   └── package.json        # Frontend dependencies
 ├── backend/                # FastAPI backend application
 │   ├── app/               # Main application code
 │   │   ├── ml/           # Machine learning modules
 │   │   └── api/          # API endpoints
 │   ├── requirements.txt   # Python dependencies
-│   └── server.py         # Main server file
-├── docs/                  # Documentation
-├── tests/                 # Test files
+│   └── server_langgraph        # Main server file
 ├── LICENSE               # MIT License
 ├── CONTRIBUTING.md       # This file
 └── README.md            # Project overview
