@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Backend service (development)
+  backend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: feelmate-backend-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - USE_LANGRAPH=true
+      - LOG_LEVEL=debug
+      - PORT=8000
+      - PYTHONPATH=/app
+    volumes:
+      # Mount source code for hot reloading
+      - ./backend:/app
+      # Exclude cache directories
+      - /app/__pycache__
+      - /app/.pytest_cache
+      - /app/.mypy_cache
+    networks:
+      - feelmate-dev-network
+    restart: unless-stopped
+    command: ["python", "-m", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  # Frontend service (development)
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend.dev
+    container_name: feelmate-frontend-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    volumes:
+      # Mount source code for hot reloading
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend-dev
+    networks:
+      - feelmate-dev-network
+    restart: unless-stopped
+    command: ["npm", "run", "dev"]
+
+networks:
+  feelmate-dev-network:
+    driver: bridge

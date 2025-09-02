@@ -1,6 +1,5 @@
 {
   "/api/chat/route": "app/api/chat/route.js",
   "/landing/page": "app/landing/page.js",
-  "/(auth)/sign-in/page": "app/(auth)/sign-in/page.js",
   "/chat/page": "app/chat/page.js"
 }

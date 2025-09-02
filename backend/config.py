@@ -3,7 +3,11 @@ Production configuration for FeelMate Emotion-Aware Chatbot
 """
 
 import os
+from dotenv import load_dotenv
 from pathlib import Path
+
+# Load environment variables from .env if present
+load_dotenv()
 
 # Base directory
 BASE_DIR = Path(__file__).parent
@@ -37,6 +41,12 @@ CRISIS_KEYWORDS = [
     "self-harm", "cut myself", "overdose", "harm myself",
     "can't take it anymore", "life is meaningless"
 ]
+
+# Database Configuration
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# LangGraph Configuration
+USE_LANGRAPH = os.getenv("USE_LANGRAPH", "true").lower() == "true"
 
 # Production Settings
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
