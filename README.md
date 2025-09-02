@@ -24,7 +24,6 @@ FeelMate is an intelligent emotional support chatbot that provides personalized 
 - Crisis detection and intervention
 
 ### 🎨 **Beautiful Modern UI**
-- Full-screen ChatGPT-like interface
 - Responsive design for all devices
 - Real-time streaming responses
 - Clean, accessible design
@@ -65,7 +64,6 @@ docker-compose -f docker-compose.dev.yml up --build
 #### 2. Access the Application
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
 
 📖 **For detailed Docker instructions, see [DOCKER.md](DOCKER.md)**
 
@@ -88,7 +86,7 @@ cd backend
 pip install -r requirements.txt
 cp env.template .env
 # Edit .env and set USE_LANGRAPH=true
-python start_production.py
+python -m uvicorn server_langgraph:app --host 0.0.0.0 --port 8001 --reload
 ```
 
 #### 3. Frontend Setup
@@ -101,7 +99,6 @@ npm run dev
 #### 4. Access the Application
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
 
 ## 🏗️ Architecture
 
@@ -113,7 +110,6 @@ frontend/
 ├── app/                # Next.js app directory
 │   ├── api/           # API routes
 │   └── chat/          # Chat page
-└── styles/            # CSS and styling
 ```
 
 ### Backend (FastAPI + LangGraph)
@@ -123,7 +119,7 @@ backend/
 │   ├── ml/
 │   │   └── graph_pipeline.py  # LangGraph conversation pipeline
 │   └── api/                   # API endpoints
-├── server.py                  # Main server
+├── server_langgraph.py                  # Main server
 └── requirements.txt           # Python dependencies
 ```
 
@@ -236,7 +232,6 @@ python -m pytest
 ## 📊 Performance
 
 - **Response Time**: < 2 seconds for most queries
-- **Concurrent Users**: Supports multiple simultaneous conversations
 - **Memory Usage**: Efficient in-memory conversation storage
 - **Scalability**: Stateless design allows horizontal scaling
 
@@ -259,8 +254,6 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 5. Submit a pull request
 
 ## 📚 Documentation
-
-- [API Documentation](http://localhost:8000/docs) - Interactive API docs
 - [Contributing Guide](CONTRIBUTING.md) - How to contribute
 - [Code of Conduct](CODE_OF_CONDUCT.md) - Community guidelines
 
@@ -283,13 +276,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **LangGraph** for conversation flow management
 - **FastAPI** for the robust backend framework
 - **Next.js** for the modern frontend experience
+- **BetterAuth** for authentication
 - **Contributors** who help improve FeelMate
 
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/yourusername/FeelMate/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/FeelMate/discussions)
-- **Email**: support@feelmate.ai
 
 ## ⚠️ Disclaimer
 
